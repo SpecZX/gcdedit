@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Diagram {
 
 	
+
 	private int xDim;
 	private int yDim;
 	
@@ -55,6 +56,15 @@ public class Diagram {
 		return this.arrows.remove(a);
 	}
 	
+	public int getxDim() {
+		return xDim;
+	}
+
+	public int getyDim() {
+		return yDim;
+	}
+
+	
 	public boolean updateLabel(){
 		//TODO
 		return false;
@@ -64,6 +74,8 @@ public class Diagram {
 		//TODO
 		return false;
 	}
+	
+	
 	
 	
 	public void save(){

@@ -3,43 +3,43 @@ package org.gcdedit;
 public class Arrow {
 	
 	
-	private int xStart;
-	private int yStart;
-	private int xEnd;
-	private int yEnd;
+	private int startX;
+	private int startY;
+	private int endX;
+	private int endY;
 	
-	public int getxStart() {
-		return xStart;
+	public int getStartX() {
+		return startX;
 	}
 
 	public void setStart(int xStart, int yStart) {
-		this.xStart = xStart;
-		this.yStart = yStart;
+		this.startX = xStart;
+		this.startY = yStart;
 	}
 
-	public int getyStart() {
-		return yStart;
+	public int getStartY() {
+		return startY;
 	}
 
 
-	public int getxEnd() {
-		return xEnd;
+	public int getEndX() {
+		return endX;
 	}
 
 	public void setEnd(int xEnd, int yEnd) {
-		this.xEnd = xEnd;
-		this.yEnd = yEnd;
+		this.endX = xEnd;
+		this.endY = yEnd;
 	}
 
-	public int getyEnd() {
-		return yEnd;
+	public int getEndY() {
+		return endY;
 	}
 
 	public Arrow(int xStart, int yStart, int xEnd, int yEnd){
-		this.xStart = xStart;
-		this.yStart = yStart;
-		this.xEnd = xEnd;
-		this.yEnd = yEnd;
+		this.startX = xStart;
+		this.startY = yStart;
+		this.endX = xEnd;
+		this.endY = yEnd;
 	}
 	
 	public Arrow(){

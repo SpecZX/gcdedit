@@ -1,21 +1,21 @@
 package org.gcdedit;
 
 public class Label {
-	private int xVal;
-	private int yVal;
+	private int valX;
+	private int valY;
 	private String content;
 	
 	public Label(int xVal, int yVal, String content){
-		this.xVal = xVal;
-		this.yVal = yVal;
+		this.valX = xVal;
+		this.valY = yVal;
 		this.content = content;
 	}
 	
-	public int getxVal(){
-		return this.xVal;
+	public int getValX(){
+		return this.valX;
 	}
-	public int getyVal(){
-		return this.yVal;
+	public int getValY(){
+		return this.valY;
 	}
 	public String getContent(){
 		return this.content;
@@ -26,12 +26,12 @@ public class Label {
 	public boolean equals(Object o){
 		if(!(o instanceof Label)) return false;
 		Label l = (Label) o;
-		return (l.getxVal()==this.xVal)&&(l.getyVal()==this.yVal);
+		return (l.getValX()==this.valX)&&(l.getValY()==this.valY);
 	}
 	
 	@Override
 	public int hashCode(){
-		return (int) Math.pow(2, xVal)*(2*yVal-1);
+		return (int) Math.pow(2, valX)*(2*valY-1);
 	}
 	
 }
