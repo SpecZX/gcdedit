@@ -1,12 +1,16 @@
 package org.gcdedit;
 
 
+import org.gcdedit.Arrow.ArrowStyle;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.shape.Circle;
@@ -18,7 +22,7 @@ public class CalGUI extends Application {
 
 
 	private static int REND_DIAG = 50;
-	
+
 	private static int REND_DIAG_CIRC = 10;
 
 
@@ -107,6 +111,9 @@ public class CalGUI extends Application {
 
 
 
+
+
+
 	//initializes our main gridpane with all the buttons
 
 	public void initGrid(GridPane grid, Diagram diag, int xDim, int yDim){
@@ -142,16 +149,20 @@ public class CalGUI extends Application {
 			public void handle(ActionEvent arg){
 				ARROW_MODE = !ARROW_MODE;
 				ARROW_START = true;
-				System.out.println("in arrow mode? "+ARROW_MODE);
+				//				System.out.println("in arrow mode? "+ARROW_MODE);
 			}			
 		});
+
+
+
+
 
 
 
 		Button renderBtn = new Button();
 		renderBtn.setPrefSize(150, 75);
 		renderBtn.setText("Render Diagram");
-		grid.add(renderBtn, 4*xDim, 0);
+		grid.add(renderBtn, 2*xDim, 2);
 		renderBtn.setOnAction(new EventHandler<ActionEvent>(){
 
 			private Diagram anonDiag;
@@ -167,33 +178,146 @@ public class CalGUI extends Application {
 		}.setter(diag));
 
 
-//		//for debugging purposes
-//		Button printDiagData = new Button();
-//		printDiagData.setPrefSize(150, 75);
-//		printDiagData.setText("Print Diagram to Console");
-//		grid.add(printDiagData, 4*xDim, 0);
-//		printDiagData.setOnAction(new EventHandler<ActionEvent>(){
-//
-//			private Diagram anonDiag;
-//			@Override
-//			public void handle(ActionEvent arg){
-//
-//				for(Label l : anonDiag.getLabels()){
-//					System.out.println(l.getContent()+" "+l.getValX()+ " "+l.getValY());
-//				}
-//				for(Arrow e : anonDiag.getArrows()){
-//					System.out.print(e.getStartX() + " "+e.getStartY()+" "+e.getEndX()+" "+e.getEndY());	
-//				}
-//			}
-//			public EventHandler<ActionEvent> setter(Diagram diag){
-//				this.anonDiag = diag;
-//				return this;
-//			}
-//		}.setter(diag));
+		Button editArrows = new Button();
+		editArrows.setPrefSize(150, 75);
+		editArrows.setText("Edit Arrows");
+		grid.add(editArrows, 2*xDim, 4);
+		editArrows.setOnAction(editArrowsAction(diag));
+
+
+
+
+
+
+		//		//for debugging purposes
+		//		Button printDiagData = new Button();
+		//		printDiagData.setPrefSize(150, 75);
+		//		printDiagData.setText("Print Diagram to Console");
+		//		grid.add(printDiagData, 4*xDim, 0);
+		//		printDiagData.setOnAction(new EventHandler<ActionEvent>(){
+		//
+		//			private Diagram anonDiag;
+		//			@Override
+		//			public void handle(ActionEvent arg){
+		//
+		//				for(Label l : anonDiag.getLabels()){
+		//					System.out.println(l.getContent()+" "+l.getValX()+ " "+l.getValY());
+		//				}
+		//				for(Arrow e : anonDiag.getArrows()){
+		//					System.out.print(e.getStartX() + " "+e.getStartY()+" "+e.getEndX()+" "+e.getEndY());	
+		//				}
+		//			}
+		//			public EventHandler<ActionEvent> setter(Diagram diag){
+		//				this.anonDiag = diag;
+		//				return this;
+		//			}
+		//		}.setter(diag));
 
 
 	}
 
+
+	public EventHandler<ActionEvent> editArrowsAction(Diagram diag){
+		return (new EventHandler<ActionEvent>(){
+
+
+			int y = diag.getArrows().size();
+
+			@Override
+			public void handle(ActionEvent event) {
+				Group editArrowsRoot = new Group();
+				Stage editArrowsStage = new Stage();
+				editArrowsStage.setScene(new Scene(editArrowsRoot, 300, (y+2)*30));
+				editArrowsStage.setTitle("Modify Diagram Arrows");
+
+				int i = 0;
+
+				for(Arrow a : diag.getArrows()){
+					Button btn = new Button();
+					btn.setOnAction(arrowEditorButtonAction(a));
+					btn.setText("Arrow: ("+a.getStartX()+", "+ a.getStartY()+") to ("+ a.getEndX()+", "+ a.getEndY()+")");
+					btn.setTranslateX(25);
+					btn.setTranslateY(i*30);
+					i++;
+					editArrowsRoot.getChildren().add(btn);
+				}
+
+				Button okbtn = new Button();
+				okbtn.setText("OK");
+				okbtn.setTranslateY((y+1)*30);
+				okbtn.setOnAction(new EventHandler<ActionEvent>(){
+
+					@Override
+					public void handle(ActionEvent event) {
+						editArrowsStage.close();
+					}
+
+				});
+
+				editArrowsRoot.getChildren().add(okbtn);
+
+
+				editArrowsStage.show();
+
+			}
+
+		});
+
+
+
+	}
+
+
+
+
+
+	public EventHandler<ActionEvent> arrowEditorButtonAction(Arrow a){
+
+		return (new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event){
+
+
+				Group arrowEditRoot = new Group();
+				Stage arrowEditStage = new Stage();
+				arrowEditStage.setScene(new Scene(arrowEditRoot, 200, 125));
+				arrowEditStage.setTitle("Modify Arrow");
+
+				ComboBox<ArrowStyle> arrowStyle = new ComboBox<ArrowStyle>();
+				arrowStyle.setPromptText("Current Style: "+a.getStyle());
+
+				for(ArrowStyle style : ArrowStyle.values()){
+					arrowStyle.getItems().add(style);
+				}
+
+
+				Button okbtn = new Button();
+				okbtn.setText("OK");
+				okbtn.setOnAction(new EventHandler<ActionEvent>(){
+
+					@Override
+					public void handle(ActionEvent event) {
+						a.setStyle(arrowStyle.getValue());
+						arrowEditStage.close();
+					}
+
+				});
+
+				okbtn.setTranslateY(100);
+				arrowStyle.setTranslateX(25);
+				arrowStyle.setTranslateY(25);
+
+				arrowEditRoot.getChildren().addAll(okbtn, arrowStyle);
+
+				arrowEditStage.show();
+
+
+			}
+		});
+
+
+
+	}
 
 
 	//produces a pictorial reprsentation of our diagram
@@ -217,11 +341,11 @@ public class CalGUI extends Application {
 			c.setTranslateX(REND_DIAG*(l.getValX()+1));
 			c.setTranslateY(REND_DIAG*(l.getValY()+1));
 			c.setOpacity(.5);
-			
+
 			javafx.scene.control.Label lbl = new javafx.scene.control.Label(l.getContent());
 			lbl.setTranslateX(REND_DIAG*(l.getValX()+1)-REND_DIAG_CIRC);
 			lbl.setTranslateY(REND_DIAG*(l.getValY()+1)-2.5*REND_DIAG_CIRC);
-			
+
 			renderRoot.getChildren().addAll(lbl, c);
 		}
 
@@ -231,8 +355,31 @@ public class CalGUI extends Application {
 			l.setStartY((a.getStartY()+1)*REND_DIAG);
 			l.setEndX((a.getEndX()+1)*REND_DIAG);
 			l.setEndY((a.getEndY()+1)*REND_DIAG);
-			l.setOpacity(.5);
+			
+			//this is just some hacky attempt at rendering dashed vs solid lines,
+			//TODO add more to this later
+
+
+
+			switch(a.getStyle()){
+			case SOLID:
+				break;
+				
+			case DASHED:
+				l.getStrokeDashArray().addAll(25d, 10d);
+				break;
+			default:
+				break;
+				
+			}
+			
+
+
 			renderRoot.getChildren().add(l);
+
+
+
+
 		}
 
 		renderStage.show();
@@ -313,8 +460,8 @@ public class CalGUI extends Application {
 		loadingStage.setScene(new Scene(loadingRoot, 200, 125));
 		loadingStage.setTitle("Specify Diagram Dimensions");
 		initLoadingMenu(loadingRoot, loadingStage);
-		
-		
+
+
 
 	}
 

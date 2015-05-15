@@ -3,10 +3,22 @@ package org.gcdedit;
 public class Arrow {
 	
 	
+
 	private int startX;
 	private int startY;
 	private int endX;
 	private int endY;
+	
+	
+	//I've just added this enum for the time being...
+	
+	public enum ArrowStyle{
+		SOLID, DASHED;
+	}
+	
+	
+	private ArrowStyle style;
+	
 	
 	public int getStartX() {
 		return startX;
@@ -40,13 +52,23 @@ public class Arrow {
 		this.startY = yStart;
 		this.endX = xEnd;
 		this.endY = yEnd;
+		this.style = ArrowStyle.SOLID;
 	}
 	
 	public Arrow(){
 		
 	}
+
 	
-	//TODO various static variables for arrow traits
+	public ArrowStyle getStyle() {
+		return style;
+	}
+
+	public void setStyle(ArrowStyle style) {
+		this.style = style;
+	}
+
+	
 	
 	
 }
