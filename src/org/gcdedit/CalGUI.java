@@ -1,5 +1,7 @@
 package org.gcdedit;
 
+import java.io.File;
+import java.io.IOException;
 
 import org.gcdedit.Arrow.ArrowStyle;
 
@@ -35,6 +37,8 @@ public class CalGUI extends Application {
 	private int yStart;
 	private int xEnd;
 	private int yEnd;
+
+	private Parser parser;
 
 
 
@@ -122,6 +126,7 @@ public class CalGUI extends Application {
 
 
 		diag = new Diagram(xDim, yDim);
+		parser.setDiagram(diag);
 
 
 		Button[][] btns = new Button[xDim][yDim];
@@ -176,6 +181,27 @@ public class CalGUI extends Application {
 				return this;
 			}
 		}.setter(diag));
+
+		Button parseButton = new Button();
+		parseButton.setPrefSize(150,75);
+		parseButton.setText("Generate TikzCD");
+		grid.add(parseButton, 2*xDim, yDim);
+		parseButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent arg) {
+				try {
+					File tempfile = File.createTempFile("gcdedit", ".txt");
+					parser.to_tikzcd(tempfile);
+					System.out.println("Output contained in " + tempfile.getPath());
+				}
+				catch (IOException e) {
+					System.out.println(e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		});
+
+
 
 
 		Button editArrows = new Button();
@@ -445,7 +471,11 @@ public class CalGUI extends Application {
 		Diagram diag = null;
 		GridPane grid = new GridPane();
 
+		parser = new Parser();
 		initGrid(grid, diag, dimXDiagram, dimYDiagram);
+
+
+		//parser.setDiagram(diag);
 
 		root.getChildren().add(grid);
 		stage.show();
@@ -460,14 +490,9 @@ public class CalGUI extends Application {
 		loadingStage.setScene(new Scene(loadingRoot, 200, 125));
 		loadingStage.setTitle("Specify Diagram Dimensions");
 		initLoadingMenu(loadingRoot, loadingStage);
-
-
-
 	}
 
 	public static void main(String[] args) {
 		Application.launch(args);
 	}
-
-
 }
