@@ -2,30 +2,37 @@ package org.gcdedit;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.gcdedit.Arrow.ArrowStyle;
-import org.gcdedit.Arrow.ArrowType;
+import java.util.ArrayList;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-public class CalGUI extends Application {
+import org.gcdedit.Arrow.ArrowStyle;
+import org.gcdedit.Arrow.ArrowType;
 
-
-
-	private static int REND_DIAG = 50;
-
-	private static int REND_DIAG_CIRC = 10;
+public class CalExperimentalGUI extends Application{
+	
+	private static int REND_DIAG_CIRC = 2;
+	private static int RECT_SIZE = 50;
+	private static int REND_TEXT_OFFSET = 10;
+	private static double ARROW_HEAD_LENGTH = 5.0;
+	private static double ARROW_HEAD_WIDTH = 2.5;
 
 
 	//these are control variables to make adding arrows work correctly
@@ -39,71 +46,85 @@ public class CalGUI extends Application {
 	private int yEnd;
 
 	private Parser parser;
-
-
-
-
-
+	
+	
+	private int signOf(double d){
+		if(d<0) return -1;
+		if(d>0) return 1;
+		return 0;
+	}
 
 
 	//initializes our main gridpane with all the buttons
 
-	public void initGrid(GridPane grid, Diagram diag, int xDim, int yDim){
 
+	public void initPane(Pane pane, Diagram diag, int xDim, int yDim, Group root){
 		diag = new Diagram(xDim, yDim);
 		parser.setDiagram(diag);
 
-		Button[][] btns = new Button[xDim][yDim];
 
-		//initialize buttons
-		//right now, pressing a button will query the user for a name
-		//and then add a label with that name to the diagram
+		Rectangle[][] rects = new Rectangle[xDim][yDim];
 
-		for(int i =0;i<xDim;i++){
-			for(int j = 0; j<yDim;j++){
-				btns[i][j] = new Button();
-				btns[i][j].setPrefSize(75, 75);
-				btns[i][j].setOnAction(gridButtonAction(i, j, diag));
-				grid.add(btns[i][j], 2*i, 2*j);
+
+		Rectangle arrowModeIndicator = new Rectangle(150, 75);
+		arrowModeIndicator.setFill(Color.RED);
+		arrowModeIndicator.setTranslateX(xDim*RECT_SIZE);
+		arrowModeIndicator.setTranslateY(0);
+		pane.getChildren().add(arrowModeIndicator);
+
+		for(int i = 0; i<xDim;i++){
+			for(int j = 0;j<yDim;j++){
+				rects[i][j] = new Rectangle(RECT_SIZE, RECT_SIZE);
+				rects[i][j].setTranslateX(i*RECT_SIZE);
+				rects[i][j].setTranslateY(j*RECT_SIZE);
+				rects[i][j].setOnMouseClicked(rectClickAction(i, j, diag, pane, arrowModeIndicator, root));
+				rects[i][j].setFill(Color.WHEAT);
+				rects[i][j].setStroke(Color.BLACK);
+				rects[i][j].setOpacity(.5);
+				pane.getChildren().add(rects[i][j]);
+
 			}
 		}
 
-		Button arrowMode = new Button();
-		arrowMode.setPrefSize(150, 75);
-		arrowMode.setText("Arrow Mode");
-		grid.add(arrowMode, 2*xDim, 0);
-		arrowMode.setOnAction(new EventHandler<ActionEvent>(){
+
+
+
+		Button arrowModeButton = new Button();
+
+
+		arrowModeButton.setTranslateX(xDim*RECT_SIZE);
+		arrowModeButton.setTranslateY(75);
+
+
+		arrowModeButton.setPrefSize(150, 75);
+		arrowModeButton.setText("Arrow Mode");
+		pane.getChildren().add(arrowModeButton);
+		arrowModeButton.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
 			public void handle(ActionEvent arg){
 				ARROW_MODE = !ARROW_MODE;
 				ARROW_START = true;
-				//				System.out.println("in arrow mode? "+ARROW_MODE);
+				arrowModeIndicator.setFill(Color.GREEN);
+
+				//Want to change the color of the button whenever
+				//arrow mode is active
+
+
+
+
+
 			}			
 		});
 
 
-		Button renderBtn = new Button();
-		renderBtn.setPrefSize(150, 75);
-		renderBtn.setText("Render Diagram");
-		grid.add(renderBtn, 2*xDim, 2);
-		renderBtn.setOnAction(new EventHandler<ActionEvent>(){
-
-			private Diagram anonDiag;
-
-			@Override
-			public void handle(ActionEvent arg){
-				renderDiag(anonDiag);
-			}
-			public EventHandler<ActionEvent> setter(Diagram diag){
-				this.anonDiag = diag;
-				return this;
-			}
-		}.setter(diag));
-
 		Button parseButton = new Button();
 		parseButton.setPrefSize(150,75);
 		parseButton.setText("Generate TikzCD");
-		grid.add(parseButton, 2*xDim, 6);
+
+		parseButton.setTranslateX(xDim*RECT_SIZE);
+		parseButton.setTranslateY(225);
+
+		pane.getChildren().add(parseButton);
 		parseButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent arg) {
@@ -124,65 +145,129 @@ public class CalGUI extends Application {
 
 
 
-		Button editArrows = new Button();
-		editArrows.setPrefSize(150, 75);
-		editArrows.setText("Edit Arrows");
-		grid.add(editArrows, 2*xDim, 4);
-		editArrows.setOnAction(editArrowsAction(diag));
+		Button editArrowsButton = new Button();
+		editArrowsButton.setPrefSize(150, 75);
+		editArrowsButton.setText("Edit Arrows");
 
+		editArrowsButton.setTranslateX(xDim*RECT_SIZE);
+		editArrowsButton.setTranslateY(150);
 
-
-
-
-
-		//		//for debugging purposes
-		//		Button printDiagData = new Button();
-		//		printDiagData.setPrefSize(150, 75);
-		//		printDiagData.setText("Print Diagram to Console");
-		//		grid.add(printDiagData, 4*xDim, 0);
-		//		printDiagData.setOnAction(new EventHandler<ActionEvent>(){
-		//
-		//			private Diagram anonDiag;
-		//			@Override
-		//			public void handle(ActionEvent arg){
-		//
-		//				for(Label l : anonDiag.getLabels()){
-		//					System.out.println(l.getContent()+" "+l.getValX()+ " "+l.getValY());
-		//				}
-		//				for(Arrow e : anonDiag.getArrows()){
-		//					System.out.print(e.getStartX() + " "+e.getStartY()+" "+e.getEndX()+" "+e.getEndY());	
-		//				}
-		//			}
-		//			public EventHandler<ActionEvent> setter(Diagram diag){
-		//				this.anonDiag = diag;
-		//				return this;
-		//			}
-		//		}.setter(diag));
+		pane.getChildren().add(editArrowsButton);
+		editArrowsButton.setOnAction(editArrowsButtonAction(diag, pane, root));
 
 
 	}
 
 
 
-	//produces an event handler to control what happens when the (i, j) button is selected
+	public void renderDiagOnPane(Pane pane, Diagram diag, Group root){
+		//first wipe pane clean
 
-	public EventHandler<ActionEvent> gridButtonAction(int i, int j, Diagram diag){
-		return (new EventHandler<ActionEvent>(){
+
+		ArrayList<Node> toDelete = new ArrayList<Node>();
+
+		for(Node n : pane.getChildren()){
+			if(n instanceof Line) toDelete.add(n);
+			if(n instanceof Circle) toDelete.add(n);
+			if(n instanceof Polygon) toDelete.add(n);
+		}
+
+		pane.getChildren().removeAll(toDelete);			
+
+
+
+		//then repopulate from the diagram
+
+		for(Label lbl : diag.getLabels()){
+			Circle circ = new Circle(lbl.getValX()*RECT_SIZE+(RECT_SIZE/2), lbl.getValY()*RECT_SIZE+(RECT_SIZE/2), REND_DIAG_CIRC);
+			Text text = new Text(lbl.getValX()*RECT_SIZE+(RECT_SIZE/2)-REND_TEXT_OFFSET, 
+					lbl.getValY()*RECT_SIZE+(RECT_SIZE/2)+REND_TEXT_OFFSET, lbl.getContent());
+			
+			pane.getChildren().addAll(circ, text);
+			
+		}
+
+		for(Arrow a : diag.getArrows()){
+
+			Line l = new Line(a.getStartX()*RECT_SIZE+(RECT_SIZE/2), a.getStartY()*RECT_SIZE+(RECT_SIZE/2), 
+					a.getEndX()*RECT_SIZE+(RECT_SIZE/2), a.getEndY()*RECT_SIZE+(RECT_SIZE/2));
+			
+			//this is some fiddly thing to get the head of the arrow
+			//perhaps there is a smarter way to do this...
+			
+			
+			
+			
+			
+			Polygon head = new Polygon();
+
+			double x1 = (double) a.getEndX();
+			double y1 = (double) a.getEndY();
+
+			double x0 = (double) a.getStartX();
+			double y0 = (double) a.getStartY();
+			
+			//need to fix the head so it actually points correctly
+			
+			
+			
+			head.getPoints().addAll(new Double[]{ARROW_HEAD_LENGTH*signOf(x1-x0), ARROW_HEAD_LENGTH*signOf(y1-y0),
+					ARROW_HEAD_WIDTH*signOf(y1-y0), -ARROW_HEAD_WIDTH*signOf(x1-x0),
+					-ARROW_HEAD_WIDTH*signOf(y1-y0), ARROW_HEAD_WIDTH*signOf(x1-x0)
+					});
+			
+			head.setTranslateX(x1*RECT_SIZE+(RECT_SIZE/2));
+			head.setTranslateY(y1*RECT_SIZE+(RECT_SIZE/2));
+
+			switch(a.getStyle()){
+			case SOLID:
+				break;
+
+			case DASHED:
+				l.getStrokeDashArray().addAll(25d, 10d);
+
+			default:
+				break;
+
+
+			}
+			
+			
+			pane.getChildren().addAll(l, head);
+
+
+		}
+
+
+
+	}
+
+	private EventHandler<MouseEvent> rectClickAction(int i, int j,
+			Diagram diag, Pane pane, Rectangle arrowModeIndicator, Group root) {
+		return (new EventHandler<MouseEvent>(){
 
 			@Override
-			public void handle(ActionEvent arg){
+			public void handle(MouseEvent arg){
 
 				if(ARROW_MODE){
 					if(ARROW_START){
 						xStart = i;
 						yStart = j;
 						ARROW_START = false;
+						arrowModeIndicator.setFill(Color.YELLOW);
 					}else{
 						xEnd = i;
 						yEnd = j;
 						diag.addArrow(new Arrow(xStart, yStart, xEnd, yEnd));
 						ARROW_START = true;
 						ARROW_MODE = false;
+						//						Line l = new Line(xStart*rectSize+(rectSize/2), yStart*rectSize+(rectSize/2), 
+						//								xEnd*rectSize+(rectSize/2), yEnd*rectSize+(rectSize/2));
+						//						pane.getChildren().add(l);
+
+						renderDiagOnPane(pane, diag, root);
+						arrowModeIndicator.setFill(Color.RED);
+
 
 					}
 				}
@@ -190,8 +275,8 @@ public class CalGUI extends Application {
 
 					Group labelRoot = new Group();
 					Stage labelStage = new Stage();
-					labelStage.setScene(new Scene(labelRoot, 200, 125));
-					labelStage.setTitle("Input name for this node");
+					labelStage.setScene(new Scene(labelRoot, 200, 110));
+					labelStage.setTitle("Name Label");
 
 					TextField labelname = new TextField("Label Name");
 					Button okbtn = new Button();
@@ -200,7 +285,8 @@ public class CalGUI extends Application {
 
 					labelname.setTranslateY(25);
 					labelname.setTranslateX(25);
-					okbtn.setTranslateY(100);
+					okbtn.setTranslateX(25);
+					okbtn.setTranslateY(75);
 					okbtn.setText("OK");
 					okbtn.setOnAction(new EventHandler<ActionEvent>(){
 
@@ -208,14 +294,18 @@ public class CalGUI extends Application {
 						public void handle(ActionEvent arg0) {
 							if(!labelname.getText().equals("Label Name")){
 								diag.addLabel(new Label(i, j, labelname.getText()));
+
+								//this is just temporary, later we should put in a dot or something
+								//								rects[i][j].setFill(Color.BLACK);
 							}
 							labelStage.close();
+							renderDiagOnPane(pane, diag, root);
 						}
 
 					});
 
-					cancelbtn.setTranslateX(150);
-					cancelbtn.setTranslateY(100);
+					cancelbtn.setTranslateX(100);
+					cancelbtn.setTranslateY(75);
 					cancelbtn.setText("Cancel");
 					cancelbtn.setOnAction(new EventHandler<ActionEvent>(){
 
@@ -233,28 +323,29 @@ public class CalGUI extends Application {
 				}
 			}
 		});
+
+
+
 	}
 
-
-
-	public EventHandler<ActionEvent> editArrowsAction(Diagram diag){
+	public EventHandler<ActionEvent> editArrowsButtonAction(Diagram diag, Pane pane, Group root){
 		return (new EventHandler<ActionEvent>(){
 
 
-			int y = diag.getArrows().size();
 
 			@Override
 			public void handle(ActionEvent event) {
 				Group editArrowsRoot = new Group();
 				Stage editArrowsStage = new Stage();
-				editArrowsStage.setScene(new Scene(editArrowsRoot, 300, (y+4)*30+10));
+				int y = diag.getArrows().size();
+				editArrowsStage.setScene(new Scene(editArrowsRoot, 300, (y+2)*30+10)); //(y+4)*30+10
 				editArrowsStage.setTitle("Modify Diagram Arrows");
 
 				int i = 0;
 
 				for(Arrow a : diag.getArrows()){
 					Button btn = new Button();
-					btn.setOnAction(arrowEditorButtonAction(a));
+					btn.setOnAction(editSingleArrowButtonAction(a, diag, pane, root));
 					btn.setText("Arrow: ("+a.getStartX()+", "+ a.getStartY()+") to ("+ a.getEndX()+", "+ a.getEndY()+")");
 					btn.setTranslateX(25);
 					btn.setTranslateY(i*30+10);
@@ -265,7 +356,7 @@ public class CalGUI extends Application {
 				Button okbtn = new Button();
 				okbtn.setText("OK");
 
-				okbtn.setTranslateY((y+3)*30+10);
+				okbtn.setTranslateY((y+1)*30+10);
 				okbtn.setTranslateX(25);
 				okbtn.setOnAction(new EventHandler<ActionEvent>(){
 
@@ -290,10 +381,7 @@ public class CalGUI extends Application {
 	}
 
 
-
-
-
-	public EventHandler<ActionEvent> arrowEditorButtonAction(Arrow a){
+	public EventHandler<ActionEvent> editSingleArrowButtonAction(Arrow a, Diagram diag, Pane pane, Group root){
 
 		return (new EventHandler<ActionEvent>(){
 			@Override
@@ -335,6 +423,20 @@ public class CalGUI extends Application {
 						a.setStyle(arrowStyle.getValue());
 						a.setType(arrowType.getValue());
 						a.setName(arrowName.getText());
+						renderDiagOnPane(pane, diag, root);
+						arrowEditStage.close();
+					}
+
+				});
+
+				Button dltbtn = new Button();
+				dltbtn.setText("Delete Arrow");
+				dltbtn.setOnAction(new EventHandler<ActionEvent>(){
+
+					@Override
+					public void handle(ActionEvent event) {
+						diag.getArrows().remove(a);
+						renderDiagOnPane(pane, diag, root);
 						arrowEditStage.close();
 					}
 
@@ -343,7 +445,12 @@ public class CalGUI extends Application {
 
 
 
-				okbtn.setTranslateY(100);
+				okbtn.setTranslateY(95);
+				okbtn.setTranslateX(10);
+
+				dltbtn.setTranslateY(95);
+				dltbtn.setTranslateX(55);
+
 				arrowStyle.setTranslateX(10);
 				arrowStyle.setTranslateY(10);
 
@@ -354,7 +461,7 @@ public class CalGUI extends Application {
 				arrowName.setTranslateY(64);
 
 
-				arrowEditRoot.getChildren().addAll(okbtn, arrowStyle, arrowType, arrowName);
+				arrowEditRoot.getChildren().addAll(okbtn, dltbtn, arrowStyle, arrowType, arrowName);
 
 				arrowEditStage.show();
 
@@ -367,71 +474,7 @@ public class CalGUI extends Application {
 	}
 
 
-	//produces a pictorial reprsentation of our diagram
-	//currently creates a new Stage to display the diagram- this is just because it easier to do
-	//it this way.
-	//We should consider have it attached to the previous stage.
 
-	public void renderDiag(Diagram diag){
-
-
-
-		Group renderRoot = new Group();
-		Stage renderStage = new Stage();
-		renderStage.setTitle("Diagram Schematic");
-
-		//We include the +2 to make our circle nodes fit in the diagram
-
-		renderStage.setScene(new Scene(renderRoot, REND_DIAG*(diag.getxDim()+2), REND_DIAG*(diag.getyDim()+2)));
-		for(Label l : diag.getLabels()){
-			Circle c = new Circle(REND_DIAG_CIRC);
-			c.setTranslateX(REND_DIAG*(l.getValX()+1));
-			c.setTranslateY(REND_DIAG*(l.getValY()+1));
-			c.setOpacity(.5);
-
-			javafx.scene.control.Label lbl = new javafx.scene.control.Label(l.getContent());
-			lbl.setTranslateX(REND_DIAG*(l.getValX()+1)-REND_DIAG_CIRC);
-			lbl.setTranslateY(REND_DIAG*(l.getValY()+1)-2.5*REND_DIAG_CIRC);
-
-			renderRoot.getChildren().addAll(lbl, c);
-		}
-
-		for(Arrow a : diag.getArrows()){
-			Line l = new Line();
-			l.setStartX((a.getStartX()+1)*REND_DIAG);
-			l.setStartY((a.getStartY()+1)*REND_DIAG);
-			l.setEndX((a.getEndX()+1)*REND_DIAG);
-			l.setEndY((a.getEndY()+1)*REND_DIAG);
-
-			//this is just some hacky attempt at rendering dashed vs solid lines,
-			//TODO add more to this later
-
-
-
-			switch(a.getStyle()){
-			case SOLID:
-				break;
-
-			case DASHED:
-				l.getStrokeDashArray().addAll(25d, 10d);
-				break;
-			default:
-				break;
-
-			}
-
-
-
-			renderRoot.getChildren().add(l);
-
-
-
-
-		}
-
-		renderStage.show();
-
-	}
 
 	public void initLoadingMenu(Group loadingRoot, Stage loadingStage){
 		TextField xVal = new TextField("X dimension");
@@ -492,15 +535,16 @@ public class CalGUI extends Application {
 		stage.setTitle("Commutative Diagram Builder");
 
 		Diagram diag = null;
-		GridPane grid = new GridPane();
+		Pane pane = new Pane();
 
 		parser = new Parser();
-		initGrid(grid, diag, dimXDiagram, dimYDiagram);
 
+		initPane(pane, diag, dimXDiagram, dimYDiagram, root);
 
 		//parser.setDiagram(diag);
 
-		root.getChildren().add(grid);
+		//		root.getChildren().add(grid);
+		root.getChildren().add(pane);
 		stage.show();
 
 	}
@@ -518,4 +562,5 @@ public class CalGUI extends Application {
 	public static void main(String[] args) {
 		Application.launch(args);
 	}
+
 }

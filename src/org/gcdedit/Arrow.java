@@ -9,15 +9,28 @@ public class Arrow {
 	private int endX;
 	private int endY;
 	
+	private ArrowStyle style;
+	private ArrowType type;
+	
+	private String name = "";
 	
 	//I've just added this enum for the time being...
 	
+
 	public enum ArrowStyle{
 		SOLID, DASHED;
 	}
 	
+	public enum ArrowType{
+		STANDARD, INJECTIVE, SURJECTIVE;
+	}
 	
-	private ArrowStyle style;
+	
+	
+	
+	
+	
+	
 	
 	
 	public int getStartX() {
@@ -38,6 +51,14 @@ public class Arrow {
 		return endX;
 	}
 
+	public ArrowType getType() {
+		return type;
+	}
+
+	public void setType(ArrowType type) {
+		this.type = type;
+	}
+
 	public void setEnd(int xEnd, int yEnd) {
 		this.endX = xEnd;
 		this.endY = yEnd;
@@ -53,6 +74,7 @@ public class Arrow {
 		this.endX = xEnd;
 		this.endY = yEnd;
 		this.style = ArrowStyle.SOLID;
+		this.type = ArrowType.STANDARD;
 	}
 	
 	public Arrow(){
@@ -66,6 +88,15 @@ public class Arrow {
 
 	public void setStyle(ArrowStyle style) {
 		this.style = style;
+	}
+
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	

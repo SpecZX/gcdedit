@@ -61,12 +61,10 @@ public class Parser implements Comparator<Label> {
 							w.write(arrowCommand(a));
 							arrowIterator.remove();
 						}
-						/*
 						else if(arrowEndsAt(a, row, col)) {
 							w.write(arrowCommandReverse(a));
 							arrowIterator.remove();
 						}
-						*/
 					}
 					w.write("& ");
 				}
@@ -88,8 +86,8 @@ public class Parser implements Comparator<Label> {
 	public int compare(Label lab1, Label lab2) {
 		if (lab1.getValY() > lab2.getValY()) return 1;
 		if (lab1.getValY() < lab2.getValY()) return -1;
-		if (lab1.getValX() < lab2.getValX()) return -1;
-		if (lab1.getValX() > lab2.getValY()) return 1;
+		if (lab1.getValX() < lab2.getValX()) return 1;
+		if (lab1.getValX() > lab2.getValY()) return -1;
 		return 0;
 	}
 
@@ -126,30 +124,10 @@ public class Parser implements Comparator<Label> {
 	}
 
 	private String arrowCommand(Arrow a) {
-		int deltaX = a.getEndX() - a.getStartX();
-		int deltaY = a.getEndY() - a.getStartY();
-
-		StringBuilder vert = new StringBuilder();
-		StringBuilder horiz = new StringBuilder();
-
-		if (deltaX > 0) 
-			for(int i = 0; i < deltaX; i++)
-				horiz.append('r');
-		else
-			for(int i = deltaX; i < 0; i++)
-				horiz.append('l');
-
-		if (deltaY > 0)
-			for(int j = 0; j < deltaY; j++)
-				vert.append('d');
-		else
-			for(int j = deltaY; j < 0; j++)
-				vert.append('u');
-
-		return "\\arrow{" + horiz.toString() + vert.toString() +"} ";
+		return "";
 	}
 
 	private String arrowCommandReverse(Arrow a) {
-		return arrowCommand(new Arrow(a.getEndX(), a.getEndY(), a.getStartX(), a.getEndY()));
+		return "";
 	}
 }
